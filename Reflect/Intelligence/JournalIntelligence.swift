@@ -1,8 +1,5 @@
 import Foundation
 
-/// Whether the on-device model can be used right now, plus a user-facing reason
-/// when it can't. The app is fully usable as a journal either way — only the
-/// reflection features switch off.
 enum IntelligenceAvailability: Equatable, Sendable {
     case ready
     case unavailable(String)
@@ -25,14 +22,11 @@ enum IntelligenceError: LocalizedError {
     }
 }
 
-/// Everything the app asks of the on-device language model, behind a protocol so
-/// the UI can be driven by a stub in tests and previews.
 protocol JournalIntelligence: Sendable {
 
     var availability: IntelligenceAvailability { get }
 
-    /// Streams a gentle follow-up question for an entry. Each value is the full
-    /// text generated so far.
+    /// Streams a gentle follow-up question for an entry. Each value is the full text generated so far.
     func streamFollowUpQuestion(for entryText: String) -> AsyncThrowingStream<String, Error>
 
     /// One-shot structured analysis of a single entry.

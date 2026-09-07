@@ -1,11 +1,9 @@
 import Foundation
 
 /// Picks which past entries to feed the model when answering a question.
-///
-/// The on-device model has a small context window, so we can't send everything.
-/// This ranks entries by keyword overlap with the question, falls back to the
-/// most recent entries when nothing matches, and trims the result to a character
-/// budget. Pure and synchronous so it can be unit-tested without the model.
+/// The on-device model has a small context window, so can't send everything.
+/// This ranks entries by keyword overlap with the question, falls back to the most recent entries when nothing matches, and trims the result to a character budget. Pure and synchronous so it can be unit-tested without the model.
+
 enum EntryRetrieval {
 
     struct Candidate: Equatable {

@@ -1,7 +1,6 @@
 import FoundationModels
 
-/// Structured output for analysing a single entry. `@Generable` lets the
-/// on-device model fill this in as type-safe Swift values rather than free text.
+/// Structured output for analysing a single entry. `@Generable` lets the on-device model fill this in as type-safe Swift values rather than free text.
 @Generable
 struct EntryReflection: Equatable, Sendable {
 

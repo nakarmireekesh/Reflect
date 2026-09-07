@@ -1,7 +1,6 @@
 import Foundation
 
-/// Deterministic `JournalIntelligence` for SwiftUI previews and unit tests —
-/// no model, no delay-free streaming that mimics the real token stream.
+/// Deterministic `JournalIntelligence` for SwiftUI previews and unit tests — no model, no delay-free streaming that mimics the real token stream.
 final class StubJournalIntelligence: JournalIntelligence, @unchecked Sendable {
 
     var availability: IntelligenceAvailability

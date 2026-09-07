@@ -1,9 +1,8 @@
 import Foundation
 import SwiftData
 
-/// A single journal entry. `mood` / `themes` / `followUpPrompt` are filled in
-/// asynchronously by the on-device model after the entry is saved, so they are
-/// all optional / empty until analysis finishes.
+/// A single journal entry. `mood` / `themes` / `followUpPrompt` are filled in asynchronously by the on-device model after the entry is saved, so they are all optional / empty until analysis finishes.
+
 @Model
 final class JournalEntry {
 
