@@ -106,6 +106,9 @@ struct EntryEditorView: View {
         }
     }
 
+    /// Streams a fresh follow-up question, and — for an already-saved entry —
+    /// also re-runs the structured mood/theme analysis. This is the manual
+    /// recovery path when the automatic post-save analysis didn't finish.
     private func reflect() async {
         errorMessage = nil
         followUpQuestion = ""
@@ -114,6 +117,13 @@ struct EntryEditorView: View {
         do {
             for try await partial in intelligence.streamFollowUpQuestion(for: trimmed) {
                 followUpQuestion = partial
+            }
+            if let entry {
+                let reflection = try await intelligence.analyse(entryText: trimmed)
+                entry.mood = reflection.mood
+                entry.themes = reflection.themes
+                if entry.followUpPrompt == nil { entry.followUpPrompt = reflection.followUpPrompt }
+                try? context.save()
             }
         } catch is CancellationError {
             // superseded
@@ -137,7 +147,9 @@ struct EntryEditorView: View {
             target.followUpPrompt = followUpQuestion
         }
 
-        if intelligence.availability.isReady {
+        // Analyse in the background only when this entry has no reflection yet.
+        // Re-analysing an already-tagged entry is done explicitly via "Reflect on this".
+        if intelligence.availability.isReady, target.mood == nil {
             target.isAnalysing = true
             let entryText = target.text
             let id = target.persistentModelID

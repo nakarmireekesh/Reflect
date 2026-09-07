@@ -20,6 +20,23 @@ struct AskView: View {
                         .font(.footnote)
                         .foregroundStyle(.secondary)
 
+                    HStack(spacing: 10) {
+                        TextField("What was I worried about last month?", text: $question)
+                            .textFieldStyle(.roundedBorder)
+                            .focused($fieldFocused)
+                            .submitLabel(.send)
+                            .disabled(!intelligence.availability.isReady)
+                            .onSubmit { Task { await ask() } }
+
+                        Button {
+                            Task { await ask() }
+                        } label: {
+                            Image(systemName: "arrow.up.circle.fill").font(.title)
+                        }
+                        .disabled(!canAsk)
+                        .accessibilityLabel("Ask")
+                    }
+
                     if let reason = intelligence.availability.reason {
                         IntelligenceNotice(reason: reason)
                     }
@@ -45,36 +62,13 @@ struct AskView: View {
                     if let errorMessage {
                         Text(errorMessage).font(.footnote).foregroundStyle(.red)
                     }
-
-                    Spacer(minLength: 0)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
             }
             .navigationTitle("Ask")
-            .safeAreaInset(edge: .bottom) { inputBar }
+            .scrollDismissesKeyboard(.interactively)
         }
-    }
-
-    private var inputBar: some View {
-        HStack(spacing: 10) {
-            TextField("What was I worried about last month?", text: $question, axis: .vertical)
-                .textFieldStyle(.roundedBorder)
-                .lineLimit(1...3)
-                .focused($fieldFocused)
-                .disabled(!intelligence.availability.isReady)
-                .onSubmit { Task { await ask() } }
-
-            Button {
-                Task { await ask() }
-            } label: {
-                Image(systemName: "arrow.up.circle.fill").font(.title)
-            }
-            .disabled(!canAsk)
-            .accessibilityLabel("Ask")
-        }
-        .padding()
-        .background(.bar)
     }
 
     private var canAsk: Bool {

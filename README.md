@@ -7,9 +7,10 @@ nothing leaves the phone.
 
 | Journal | Editor | Insights | Ask |
 | --- | --- | --- | --- |
-| Timeline of entries, mood + themes per row | Write, then stream a reflective question | Theme-frequency chart + weekly digest | Free-text Q&A grounded in your own entries |
+| ![Journal](Docs/01-journal.png) | ![Editor](Docs/02-editor.png) | ![Insights](Docs/03-insights.png) | ![Ask](Docs/04-ask.png) |
+| Timeline with mood + themes per entry | Write, then stream a reflective question; mood/themes fill in after | Theme-frequency chart + a written weekly digest | Free-text Q&A grounded in the entries it retrieves |
 
-> Add screenshots to `Docs/` once you've run it with Apple Intelligence enabled.
+*All text in the screenshots above was generated on-device by the model — no network.*
 
 ## What it demonstrates
 
@@ -48,17 +49,14 @@ ReflectTests/       EntryRetrieval, InsightsPlanner, StubJournalIntelligence
 ## Running it
 
 1. **Xcode 26** or newer. Open `Reflect.xcodeproj`, pick an iPhone 15 Pro / 16 /
-   17 simulator (or a device), press **⌘R**. Tests: **⌘U**.
-2. The journal, editor, insights layout and Ask UI all work immediately.
-3. **To see on-device generation actually run**, Apple Intelligence must be
-   enabled on the machine:
-   - **Simulator:** enable Apple Intelligence on the host Mac
-     (System Settings ▸ Apple Intelligence & Siri) — the model downloads once
-     (a few GB, supported region + signed-in Apple Account required) and the
-     simulator then inherits it.
-   - **Device:** Settings ▸ Apple Intelligence & Siri, on an iPhone 15 Pro or newer.
-   Until then the app shows an inline "reflections are off" notice and works as a
-   plain journal — which is the intended fallback.
+   17 simulator (or a device), press **⌘R**. Tests: **⌘U** (11, all passing).
+2. **Apple Intelligence must be enabled** for the reflection features to run:
+   - **Simulator:** turn it on for the host Mac (System Settings ▸ Apple
+     Intelligence & Siri); the model downloads once and the simulator inherits it.
+   - **Device:** Settings ▸ Apple Intelligence & Siri, iPhone 15 Pro or newer.
+3. If Apple Intelligence is off or still downloading, the journal stays fully
+   usable and the reflection features show an inline reason instead — that
+   fallback path is deliberate, not an error.
 
 ```bash
 xcodebuild -project Reflect.xcodeproj -scheme Reflect \
