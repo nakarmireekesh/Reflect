@@ -1,15 +1,16 @@
 import SwiftUI
 
-/// A small tint of colour for the entry's dominant feeling.
+/// A small tint of colour for the entry's dominant feeling, coloured by mood.
 struct MoodPill: View {
     let text: String
+    private var tint: Color { MoodPalette.color(for: text) }
     var body: some View {
         Text(text)
             .font(.caption2.weight(.semibold))
             .padding(.horizontal, Spacing.s)
             .padding(.vertical, 3)
-            .background(Color.accentColor.opacity(0.12), in: Capsule())
-            .foregroundStyle(Color.accentColor)
+            .background(tint.opacity(0.16), in: Capsule())
+            .foregroundStyle(tint)
     }
 }
 

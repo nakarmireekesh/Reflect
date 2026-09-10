@@ -15,6 +15,12 @@ enum Layout {
     static let controlRadius: CGFloat = 14
 }
 
+extension Color {
+    /// The app's accent, read straight from the asset catalog (light + dark)
+    /// so it's reliable regardless of the "global accent" build setting.
+    static let brand = Color("AccentColor", bundle: .main)
+}
+
 /// Serif type for the writer's own words. The rest of the app stays system sans,
 /// so anything the person actually wrote (or the model wrote back) reads like a page.
 private struct JournalText: ViewModifier {
@@ -42,6 +48,32 @@ struct SectionHeader: View {
             .font(.caption.weight(.semibold))
             .tracking(0.8)
             .foregroundStyle(.secondary)
+    }
+}
+
+/// Muted colours for the entry's dominant feeling. The model returns free text,
+/// so moods are bucketed by keyword with a neutral fallback.
+enum MoodPalette {
+    static let positive = Color(red: 0.31, green: 0.49, blue: 0.42)   // calm green
+    static let anxious  = Color(red: 0.69, green: 0.51, blue: 0.29)   // amber
+    static let low      = Color(red: 0.37, green: 0.42, blue: 0.48)   // slate
+    static let angry    = Color(red: 0.65, green: 0.36, blue: 0.31)   // rust
+    static let neutral  = Color(red: 0.42, green: 0.45, blue: 0.50)   // blue-grey
+
+    static func color(for mood: String) -> Color {
+        let m = mood.lowercased()
+        func has(_ words: [String]) -> Bool { words.contains { m.contains($0) } }
+
+        if has(["anx", "stress", "worried", "worry", "overwhelm", "tense", "nervous",
+                "afraid", "fear", "panic", "uneasy", "restless", "wired", "dread"]) { return anxious }
+        if has(["angry", "anger", "frustrat", "irritat", "annoyed", "resent", "bitter"]) { return angry }
+        if has(["sad", "down", "low", "blue", "grief", "lonely", "empty", "hopeless",
+                "numb", "flat", "tired", "exhaust", "drained", "weary", "heavy"]) { return low }
+        if has(["calm", "content", "peace", "relax", "settled", "grateful", "hopeful",
+                "proud", "happy", "joy", "glad", "relieved", "rested", "good", "light",
+                "ease", "warm", "gentle", "quiet", "clear", "clarity", "focus",
+                "refresh", "renew", "open", "steady"]) { return positive }
+        return neutral
     }
 }
 

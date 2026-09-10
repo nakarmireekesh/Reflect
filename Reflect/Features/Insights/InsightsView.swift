@@ -46,7 +46,7 @@ struct InsightsView: View {
                         y: .value("Theme", item.theme),
                         height: .fixed(10)
                     )
-                    .foregroundStyle(Color.accentColor.opacity(0.85))
+                    .foregroundStyle(Color.brand.opacity(0.85))
                     .cornerRadius(5)
                     .annotation(position: .trailing) {
                         Text("\(item.count)").font(.caption2).foregroundStyle(.tertiary)
@@ -72,7 +72,9 @@ struct InsightsView: View {
             if let reason = intelligence.availability.reason {
                 Text(reason).font(.footnote).foregroundStyle(.secondary)
             } else if let digest {
-                Text(digest.summary).journalText(lineSpacing: 5)
+                Text(digest.summary)
+                    .journalText(lineSpacing: 5)
+                    .transition(.opacity)
                 if !digest.highlights.isEmpty {
                     VStack(alignment: .leading, spacing: Spacing.xs) {
                         ForEach(digest.highlights, id: \.self) { highlight in
@@ -100,7 +102,7 @@ struct InsightsView: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.large)
-                .tint(.accentColor)
+                .tint(.brand)
                 .disabled(isGenerating || thisWeek.isEmpty)
             }
 

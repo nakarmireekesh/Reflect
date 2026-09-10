@@ -48,6 +48,7 @@ struct OnboardingView: View {
             }
             .padding(Spacing.xl)
         }
+        .tint(.brand)
         .overlay(alignment: .topTrailing) {
             if !isLastPage {
                 Button("Skip", action: onFinish)
@@ -65,7 +66,7 @@ struct OnboardingView: View {
             Spacer()
             Image(systemName: page.symbol)
                 .font(.system(size: 52, weight: .light))
-                .foregroundStyle(Color.accentColor)
+                .foregroundStyle(Color.brand)
                 .symbolEffect(.bounce, value: index)
             VStack(spacing: Spacing.m) {
                 Text(page.title)
@@ -97,7 +98,7 @@ private struct PageDots: View {
         HStack(spacing: Spacing.s) {
             ForEach(0..<count, id: \.self) { dot in
                 Circle()
-                    .fill(dot == index ? Color.accentColor : Color.secondary.opacity(0.3))
+                    .fill(dot == index ? Color.brand : Color.secondary.opacity(0.3))
                     .frame(width: 7, height: 7)
             }
         }

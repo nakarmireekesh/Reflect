@@ -44,6 +44,8 @@ struct AskView: View {
                             Text(answer)
                                 .journalText(lineSpacing: 5)
                                 .textSelection(.enabled)
+                                .contentTransition(.opacity)
+                                .animation(.easeOut(duration: 0.12), value: answer)
                         }
                         if let errorMessage {
                             Text(errorMessage).font(.footnote).foregroundStyle(.red)

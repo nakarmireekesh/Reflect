@@ -7,20 +7,30 @@ struct EntryEditorView: View {
     @Environment(\.dismiss) private var dismiss
 
     let entry: JournalEntry?
+    let prompt: String?
+
+    private let originalText: String
 
     @State private var text: String
+    @State private var draft: JournalEntry?
     @State private var followUpQuestion = ""
     @State private var isStreaming = false
     @State private var errorMessage: String?
+    @State private var doneTapped = 0
+    @State private var discarded = false
     @FocusState private var editorFocused: Bool
 
-    init(entry: JournalEntry?) {
+    init(entry: JournalEntry?, prompt: String? = nil) {
         self.entry = entry
+        self.prompt = prompt
+        self.originalText = entry?.text ?? ""
         _text = State(initialValue: entry?.text ?? "")
     }
 
     private var isNew: Bool { entry == nil }
     private var trimmed: String { text.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var workingEntry: JournalEntry? { entry ?? draft }
+    private var placeholder: String { prompt ?? "What's on your mind?" }
 
     var body: some View {
         ScrollView {
@@ -32,7 +42,7 @@ struct EntryEditorView: View {
                     .scrollContentBackground(.hidden)
                     .overlay(alignment: .topLeading) {
                         if text.isEmpty {
-                            Text("What's on your mind?")
+                            Text(placeholder)
                                 .journalText(lineSpacing: 6)
                                 .foregroundStyle(.tertiary)
                                 .padding(.top, 8)
@@ -52,24 +62,41 @@ struct EntryEditorView: View {
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
-                Button("Save", action: save).disabled(trimmed.isEmpty)
-            }
             if isNew {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        doneTapped += 1
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .secondaryAction) {
+                    Button(role: .destructive, action: discard) {
+                        Label("Discard", systemImage: "trash")
+                    }
+                }
+            } else {
+                ToolbarItem(placement: .secondaryAction) {
+                    Button(role: .destructive, action: deleteEntry) {
+                        Label("Delete entry", systemImage: "trash")
+                    }
                 }
             }
         }
+        .onChange(of: text) { _, _ in syncModel() }
         .onAppear {
-            followUpQuestion = entry?.followUpPrompt ?? ""
+            followUpQuestion = workingEntry?.followUpPrompt ?? ""
             if isNew { editorFocused = true }
+        }
+        .onDisappear { finish() }
+        .sensoryFeedback(.impact(weight: .light), trigger: doneTapped)
+        .sensoryFeedback(trigger: followUpQuestion.isEmpty) { wasEmpty, isEmpty in
+            wasEmpty && !isEmpty ? .impact(flexibility: .soft) : nil
         }
     }
 
     private var navigationTitle: String {
-        if let entry {
-            return entry.createdAt.formatted(date: .abbreviated, time: .omitted)
+        if let workingEntry {
+            return workingEntry.createdAt.formatted(date: .abbreviated, time: .omitted)
         }
         return "New entry"
     }
@@ -80,22 +107,25 @@ struct EntryEditorView: View {
         VStack(alignment: .leading, spacing: Spacing.l) {
             Divider().opacity(0.6)
 
-            if let entry, !entry.isAnalysing, entry.mood != nil || !entry.themes.isEmpty {
+            if let workingEntry, !workingEntry.isAnalysing,
+               workingEntry.mood != nil || !workingEntry.themes.isEmpty {
                 HStack(spacing: Spacing.s) {
-                    if let mood = entry.mood { MoodPill(text: mood) }
-                    ForEach(entry.themes, id: \.self) { ThemeChip(text: $0) }
+                    if let mood = workingEntry.mood { MoodPill(text: mood) }
+                    ForEach(workingEntry.themes, id: \.self) { ThemeChip(text: $0) }
                 }
             }
 
             if !followUpQuestion.isEmpty {
                 HStack(alignment: .top, spacing: Spacing.m) {
                     Rectangle()
-                        .fill(Color.accentColor.opacity(0.35))
+                        .fill(Color.brand.opacity(0.35))
                         .frame(width: 2)
                     Text(followUpQuestion)
                         .journalText(lineSpacing: 4)
                         .italic()
                         .foregroundStyle(.secondary)
+                        .contentTransition(.opacity)
+                        .animation(.easeOut(duration: 0.12), value: followUpQuestion)
                 }
                 .transition(.opacity)
             }
@@ -108,7 +138,7 @@ struct EntryEditorView: View {
             }
             .buttonStyle(.bordered)
             .controlSize(.large)
-            .tint(.accentColor)
+            .tint(.brand)
             .disabled(trimmed.isEmpty || isStreaming)
 
             if let errorMessage {
@@ -119,10 +149,10 @@ struct EntryEditorView: View {
         .animation(.smooth(duration: 0.3), value: isStreaming)
     }
 
-    /// Streams a fresh follow-up question, and — for an already-saved entry —
-    /// also re-runs the structured mood/theme analysis. This is the manual
-    /// recovery path when the automatic post-save analysis didn't finish.
+    /// Streams a fresh follow-up question, and re-runs the structured mood/theme
+    /// analysis. Also the manual recovery path if auto-analysis didn't finish.
     private func reflect() async {
+        syncModel()
         errorMessage = nil
         followUpQuestion = ""
         isStreaming = true
@@ -131,11 +161,11 @@ struct EntryEditorView: View {
             for try await partial in intelligence.streamFollowUpQuestion(for: trimmed) {
                 followUpQuestion = partial
             }
-            if let entry {
+            if let target = workingEntry {
                 let reflection = try await intelligence.analyse(entryText: trimmed)
-                entry.mood = reflection.mood
-                entry.themes = reflection.themes
-                if entry.followUpPrompt == nil { entry.followUpPrompt = reflection.followUpPrompt }
+                target.mood = reflection.mood
+                target.themes = reflection.themes
+                if target.followUpPrompt == nil { target.followUpPrompt = reflection.followUpPrompt }
                 try? context.save()
             }
         } catch is CancellationError {
@@ -145,23 +175,43 @@ struct EntryEditorView: View {
         }
     }
 
-    // MARK: - Save + background analysis
+    // MARK: - Auto-save
 
-    private func save() {
-        let target: JournalEntry
-        if let entry {
-            entry.text = trimmed
-            target = entry
-        } else {
-            target = JournalEntry(text: trimmed)
-            context.insert(target)
+    /// Keeps a backing model in sync with the text as it's typed, so writing is
+    /// never lost. A brand-new entry's model is created on the first character.
+    private func syncModel() {
+        let clean = trimmed
+        if let target = workingEntry {
+            target.text = clean
+        } else if !clean.isEmpty {
+            let created = JournalEntry(text: clean)
+            context.insert(created)
+            draft = created
         }
+    }
+
+    /// On close: discard an empty new entry, restore an emptied existing one,
+    /// otherwise persist and kick off analysis.
+    private func finish() {
+        guard !discarded, let target = workingEntry else { return }
+        let clean = trimmed
+
+        if clean.isEmpty {
+            if isNew {
+                context.delete(target)
+                draft = nil
+            } else {
+                target.text = originalText   // don't let a stray clear destroy an entry
+            }
+            try? context.save()
+            return
+        }
+
+        target.text = clean
         if !followUpQuestion.isEmpty {
             target.followUpPrompt = followUpQuestion
         }
 
-        // Analyse in the background only when this entry has no reflection yet.
-        // Re-analysing an already-tagged entry is done explicitly via "Reflect on this".
         if intelligence.availability.isReady, target.mood == nil {
             target.isAnalysing = true
             let entryText = target.text
@@ -170,11 +220,28 @@ struct EntryEditorView: View {
         }
 
         try? context.save()
+    }
+
+    private func discard() {
+        discarded = true
+        if let target = workingEntry {
+            context.delete(target)
+            draft = nil
+            try? context.save()
+        }
         dismiss()
     }
 
-    /// Runs after the sheet is dismissed — deliberately a free `Task`, not `.task`,
-    /// so closing the editor doesn't cancel the analysis. The timeline updates
+    private func deleteEntry() {
+        discarded = true
+        if let entry {
+            context.delete(entry)
+            try? context.save()
+        }
+        dismiss()
+    }
+
+    /// Detached so closing the editor doesn't cancel it; the timeline updates
     /// itself when the entry's fields change.
     private func analyse(_ entryText: String, entryID: PersistentIdentifier) async {
         guard let target = context.model(for: entryID) as? JournalEntry else { return }
@@ -197,7 +264,7 @@ struct EntryEditorView: View {
 
 #Preview("New") {
     NavigationStack {
-        EntryEditorView(entry: nil)
+        EntryEditorView(entry: nil, prompt: "How was today?")
     }
     .environment(\.journalIntelligence, StubJournalIntelligence.preview)
     .modelContainer(PreviewData.container)

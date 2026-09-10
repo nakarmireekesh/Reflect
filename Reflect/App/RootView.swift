@@ -3,20 +3,22 @@ import SwiftUI
 struct RootView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @State private var showOnboarding = false
+    @State private var selection = 0
 
     var body: some View {
-        TabView {
-            Tab("Journal", systemImage: "book.closed") {
+        TabView(selection: $selection) {
+            Tab("Journal", systemImage: "book.closed", value: 0) {
                 TimelineView()
             }
-            Tab("Insights", systemImage: "chart.line.uptrend.xyaxis") {
+            Tab("Insights", systemImage: "chart.bar", value: 1) {
                 InsightsView()
             }
-            Tab("Ask", systemImage: "sparkles") {
+            Tab("Ask", systemImage: "sparkles", value: 2) {
                 AskView()
             }
         }
-        .tint(.accentColor)
+        .tint(.brand)
+        .sensoryFeedback(.selection, trigger: selection)
         .fullScreenCover(isPresented: $showOnboarding) {
             OnboardingView {
                 showOnboarding = false
