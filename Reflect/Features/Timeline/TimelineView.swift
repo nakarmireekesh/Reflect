@@ -13,9 +13,9 @@ struct TimelineView: View {
             Group {
                 if entries.isEmpty {
                     ContentUnavailableView {
-                        Label("Nothing written yet", systemImage: "book.closed")
+                        Label("Nothing here yet", systemImage: "book.closed")
                     } description: {
-                        Text("Your entries stay on this device. Start with whatever's on your mind.")
+                        Text("Your entries stay on this iPhone. Write whatever's on your mind.")
                     } actions: {
                         Button("New entry") { composing = true }
                             .buttonStyle(.borderedProminent)
@@ -26,6 +26,7 @@ struct TimelineView: View {
                             IntelligenceNotice(reason: reason)
                                 .listRowSeparator(.hidden)
                                 .listRowBackground(Color.clear)
+                                .listRowInsets(EdgeInsets(top: Spacing.s, leading: Spacing.l, bottom: Spacing.m, trailing: Spacing.l))
                         }
                         ForEach(entries) { entry in
                             NavigationLink {
@@ -33,10 +34,13 @@ struct TimelineView: View {
                             } label: {
                                 TimelineRow(entry: entry)
                             }
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(EdgeInsets(top: Spacing.m, leading: Spacing.l, bottom: Spacing.m, trailing: Spacing.l))
                         }
                         .onDelete(perform: delete)
                     }
                     .listStyle(.plain)
+                    .animation(.smooth, value: entries.count)
                 }
             }
             .navigationTitle("Journal")
@@ -67,8 +71,10 @@ struct TimelineView: View {
     }
 
     private func delete(_ offsets: IndexSet) {
-        for index in offsets {
-            context.delete(entries[index])
+        withAnimation(.smooth) {
+            for index in offsets {
+                context.delete(entries[index])
+            }
         }
     }
 }

@@ -16,7 +16,7 @@ struct AskView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 18) {
+                    VStack(alignment: .leading, spacing: Spacing.l) {
                         Text("Ask about anything you've written. Your entries never leave this device.")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
@@ -26,31 +26,34 @@ struct AskView: View {
                         }
 
                         if !usedEntries.isEmpty {
-                            VStack(alignment: .leading, spacing: 5) {
-                                Text("Looking at").font(.caption).foregroundStyle(.secondary)
+                            VStack(alignment: .leading, spacing: Spacing.xs) {
+                                SectionHeader(title: "Looking at")
                                 ForEach(usedEntries) { entry in
-                                    Text("• \(entry.createdAt.formatted(date: .abbreviated, time: .omitted)) — \(entry.title)")
+                                    Text("\(entry.createdAt.journalRelative) · \(entry.title)")
                                         .font(.caption)
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(.tertiary)
                                         .lineLimit(1)
                                 }
                             }
                         }
 
                         if isStreaming && answer.isEmpty {
-                            ProgressView().padding(.top, 4)
+                            ProgressView().padding(.top, Spacing.xs)
                         }
                         if !answer.isEmpty {
-                            Text(answer).textSelection(.enabled)
+                            Text(answer)
+                                .journalText(lineSpacing: 5)
+                                .textSelection(.enabled)
                         }
                         if let errorMessage {
                             Text(errorMessage).font(.footnote).foregroundStyle(.red)
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
+                    .padding(Spacing.l)
                 }
                 .scrollDismissesKeyboard(.interactively)
+                .animation(.smooth(duration: 0.25), value: usedEntries.count)
 
                 inputBar
             }

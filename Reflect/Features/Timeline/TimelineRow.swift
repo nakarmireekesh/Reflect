@@ -4,32 +4,29 @@ struct TimelineRow: View {
     let entry: JournalEntry
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(entry.createdAt, format: .dateTime.weekday(.wide).day().month(.wide))
-                .font(.caption)
+        VStack(alignment: .leading, spacing: Spacing.s) {
+            Text(entry.createdAt.journalRelative)
+                .font(.footnote)
                 .foregroundStyle(.secondary)
 
             Text(entry.text)
-                .font(.body)
+                .journalText(lineSpacing: 4)
                 .lineLimit(3)
                 .multilineTextAlignment(.leading)
 
             if entry.isAnalysing {
-                HStack(spacing: 6) {
+                HStack(spacing: Spacing.s) {
                     ProgressView().controlSize(.mini)
-                    Text("Reflecting…").font(.caption).foregroundStyle(.secondary)
+                    Text("Reflecting…").font(.caption).foregroundStyle(.tertiary)
                 }
-            } else if entry.mood != nil || !entry.themes.isEmpty {
-                HStack(spacing: 6) {
-                    if let mood = entry.mood {
-                        MoodPill(text: mood)
-                    }
-                    ForEach(entry.themes.prefix(2), id: \.self) { theme in
-                        ThemeChip(text: theme)
-                    }
-                }
+                .transition(.opacity)
+            } else if let mood = entry.mood {
+                MoodPill(text: mood)
+                    .transition(.opacity.combined(with: .scale(scale: 0.9)))
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, Spacing.xs)
+        .animation(.smooth(duration: 0.25), value: entry.isAnalysing)
+        .animation(.smooth(duration: 0.25), value: entry.mood)
     }
 }

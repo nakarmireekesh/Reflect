@@ -38,41 +38,43 @@ struct InsightsView: View {
 
     @ViewBuilder private var themesCard: some View {
         if !themes.isEmpty {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Recurring themes").font(.headline)
+            VStack(alignment: .leading, spacing: Spacing.m) {
+                SectionHeader(title: "Recurring themes")
                 Chart(themes, id: \.theme) { item in
                     BarMark(
                         x: .value("Mentions", item.count),
-                        y: .value("Theme", item.theme)
+                        y: .value("Theme", item.theme),
+                        height: .fixed(10)
                     )
-                    .foregroundStyle(Color.accentColor.gradient)
+                    .foregroundStyle(Color.accentColor.opacity(0.85))
+                    .cornerRadius(5)
                     .annotation(position: .trailing) {
-                        Text("\(item.count)").font(.caption2).foregroundStyle(.secondary)
+                        Text("\(item.count)").font(.caption2).foregroundStyle(.tertiary)
                     }
                 }
                 .chartXAxis(.hidden)
-                .frame(height: CGFloat(themes.count) * 34 + 8)
+                .frame(height: CGFloat(themes.count) * 30 + 4)
             }
             .cardStyle()
         }
     }
 
     @ViewBuilder private var digestCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Spacing.m) {
             HStack {
-                Text("This week").font(.headline)
+                SectionHeader(title: "This week")
                 Spacer()
                 Text("^[\(thisWeek.count) entry](inflect: true)")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.tertiary)
             }
 
             if let reason = intelligence.availability.reason {
                 Text(reason).font(.footnote).foregroundStyle(.secondary)
             } else if let digest {
-                Text(digest.summary)
+                Text(digest.summary).journalText(lineSpacing: 5)
                 if !digest.highlights.isEmpty {
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: Spacing.xs) {
                         ForEach(digest.highlights, id: \.self) { highlight in
                             Label(highlight, systemImage: "circle.fill")
                                 .labelStyle(BulletLabelStyle())
@@ -81,7 +83,7 @@ struct InsightsView: View {
                     .font(.callout)
                 }
                 Text(digest.encouragement)
-                    .font(.callout).italic()
+                    .journalText(.callout, lineSpacing: 4).italic()
                     .foregroundStyle(.secondary)
             } else {
                 Text("Generate a gentle summary of your week from your recent entries.")
@@ -94,8 +96,11 @@ struct InsightsView: View {
                     Task { await generate() }
                 } label: {
                     Label(buttonTitle, systemImage: "sparkles")
+                        .font(.subheadline.weight(.medium))
                 }
                 .buttonStyle(.bordered)
+                .controlSize(.large)
+                .tint(.accentColor)
                 .disabled(isGenerating || thisWeek.isEmpty)
             }
 
@@ -103,6 +108,7 @@ struct InsightsView: View {
                 Text(errorMessage).font(.footnote).foregroundStyle(.red)
             }
         }
+        .animation(.smooth(duration: 0.3), value: digest)
         .cardStyle()
     }
 

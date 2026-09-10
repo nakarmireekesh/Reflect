@@ -1,13 +1,14 @@
 import SwiftUI
 
+/// A small tint of colour for the entry's dominant feeling.
 struct MoodPill: View {
     let text: String
     var body: some View {
         Text(text)
-            .font(.caption.weight(.medium))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 4)
-            .background(Color.accentColor.opacity(0.15), in: Capsule())
+            .font(.caption2.weight(.semibold))
+            .padding(.horizontal, Spacing.s)
+            .padding(.vertical, 3)
+            .background(Color.accentColor.opacity(0.12), in: Capsule())
             .foregroundStyle(Color.accentColor)
     }
 }
@@ -16,10 +17,10 @@ struct ThemeChip: View {
     let text: String
     var body: some View {
         Text(text)
-            .font(.caption)
-            .padding(.horizontal, 8)
+            .font(.caption2)
+            .padding(.horizontal, Spacing.s)
             .padding(.vertical, 3)
-            .background(.quaternary, in: Capsule())
+            .overlay(Capsule().strokeBorder(.quaternary))
             .foregroundStyle(.secondary)
     }
 }
@@ -28,22 +29,22 @@ struct ThemeChip: View {
 struct IntelligenceNotice: View {
     let reason: String
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .top, spacing: Spacing.m) {
             Image(systemName: "sparkles")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.tertiary)
             Text(reason)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }
-        .padding(12)
+        .padding(Spacing.m)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: Layout.controlRadius))
     }
 }
 
 struct BulletLabelStyle: LabelStyle {
     func makeBody(configuration: Configuration) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
+        HStack(alignment: .firstTextBaseline, spacing: Spacing.s) {
             configuration.icon
                 .font(.system(size: 5))
                 .foregroundStyle(.tertiary)
@@ -57,7 +58,7 @@ extension View {
     func cardStyle() -> some View {
         self
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(16)
-            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+            .padding(Spacing.l)
+            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: Layout.cardRadius))
     }
 }

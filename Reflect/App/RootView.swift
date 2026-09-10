@@ -1,6 +1,9 @@
 import SwiftUI
 
 struct RootView: View {
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @State private var showOnboarding = false
+
     var body: some View {
         TabView {
             Tab("Journal", systemImage: "book.closed") {
@@ -14,6 +17,15 @@ struct RootView: View {
             }
         }
         .tint(.accentColor)
+        .fullScreenCover(isPresented: $showOnboarding) {
+            OnboardingView {
+                showOnboarding = false
+                hasCompletedOnboarding = true
+            }
+        }
+        .onAppear {
+            showOnboarding = !hasCompletedOnboarding
+        }
     }
 }
 

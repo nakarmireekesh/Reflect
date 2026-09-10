@@ -24,14 +24,16 @@ struct EntryEditorView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: Spacing.xl) {
                 TextEditor(text: $text)
                     .focused($editorFocused)
-                    .frame(minHeight: 220)
+                    .journalText(lineSpacing: 6)
+                    .frame(minHeight: 280)
                     .scrollContentBackground(.hidden)
                     .overlay(alignment: .topLeading) {
                         if text.isEmpty {
                             Text("What's on your mind?")
+                                .journalText(lineSpacing: 6)
                                 .foregroundStyle(.tertiary)
                                 .padding(.top, 8)
                                 .padding(.leading, 5)
@@ -45,7 +47,7 @@ struct EntryEditorView: View {
                     IntelligenceNotice(reason: reason)
                 }
             }
-            .padding()
+            .padding(Spacing.l)
         }
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -75,35 +77,46 @@ struct EntryEditorView: View {
     // MARK: - Reflection
 
     @ViewBuilder private var reflectionSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Spacing.l) {
+            Divider().opacity(0.6)
+
             if let entry, !entry.isAnalysing, entry.mood != nil || !entry.themes.isEmpty {
-                HStack(spacing: 6) {
+                HStack(spacing: Spacing.s) {
                     if let mood = entry.mood { MoodPill(text: mood) }
                     ForEach(entry.themes, id: \.self) { ThemeChip(text: $0) }
                 }
             }
 
             if !followUpQuestion.isEmpty {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Image(systemName: "quote.opening").foregroundStyle(.tertiary)
-                    Text(followUpQuestion).italic()
+                HStack(alignment: .top, spacing: Spacing.m) {
+                    Rectangle()
+                        .fill(Color.accentColor.opacity(0.35))
+                        .frame(width: 2)
+                    Text(followUpQuestion)
+                        .journalText(lineSpacing: 4)
+                        .italic()
+                        .foregroundStyle(.secondary)
                 }
-                .font(.callout)
-                .foregroundStyle(.secondary)
+                .transition(.opacity)
             }
 
             Button {
                 Task { await reflect() }
             } label: {
                 Label(isStreaming ? "Thinking…" : "Reflect on this", systemImage: "sparkles")
+                    .font(.subheadline.weight(.medium))
             }
             .buttonStyle(.bordered)
+            .controlSize(.large)
+            .tint(.accentColor)
             .disabled(trimmed.isEmpty || isStreaming)
 
             if let errorMessage {
                 Text(errorMessage).font(.footnote).foregroundStyle(.red)
             }
         }
+        .animation(.smooth(duration: 0.3), value: followUpQuestion.isEmpty)
+        .animation(.smooth(duration: 0.3), value: isStreaming)
     }
 
     /// Streams a fresh follow-up question, and — for an already-saved entry —
