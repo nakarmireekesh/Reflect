@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 struct SettingsView: View {
@@ -6,6 +7,7 @@ struct SettingsView: View {
     @AppStorage("isReminderEnabled") private var isReminderEnabled = false
     @AppStorage("reminderHour") private var reminderHour = 20
     @AppStorage("reminderMinute") private var reminderMinute = 0
+    @Query(sort: \JournalEntry.createdAt, order: .reverse) private var entries: [JournalEntry]
 
     @State private var biometry = AppLockState.availableBiometry()
     @State private var reminderDeniedMessage: String?
@@ -39,6 +41,23 @@ struct SettingsView: View {
                 } footer: {
                     Text(reminderDeniedMessage ?? "A gentle nudge to write, once a day.")
                 }
+
+                Section {
+                    ShareLink(item: markdownExportURL) {
+                        Label("Export as Markdown", systemImage: "doc.text")
+                    }
+                    ShareLink(item: jsonExportURL) {
+                        Label("Export as JSON", systemImage: "curlybraces")
+                    }
+                } header: {
+                    Text("Export")
+                } footer: {
+                    Text(entries.isEmpty
+                        ? "Write a few entries first, then export a copy here."
+                        : "Save a copy of your journal — nothing is uploaded, you choose where it goes.")
+                }
+                .disabled(entries.isEmpty)
+                .foregroundStyle(entries.isEmpty ? .secondary : .primary)
 
                 Section {
                     Label("Everything you write stays on this iPhone.", systemImage: "iphone")
@@ -103,8 +122,36 @@ struct SettingsView: View {
             }
         )
     }
+
+    // MARK: - Export
+
+    private var markdownExportURL: URL {
+        Self.writeTemp(JournalExporter.markdown(for: entries), named: "Reflect-Export-\(Self.exportDateStamp).md")
+    }
+
+    private var jsonExportURL: URL {
+        let data = try? JournalExporter.json(for: entries)
+        return Self.writeTemp(data ?? Data(), named: "Reflect-Export-\(Self.exportDateStamp).json")
+    }
+
+    private static var exportDateStamp: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: .now)
+    }
+
+    private static func writeTemp(_ content: String, named filename: String) -> URL {
+        writeTemp(Data(content.utf8), named: filename)
+    }
+
+    private static func writeTemp(_ data: Data, named filename: String) -> URL {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+        try? data.write(to: url, options: .atomic)
+        return url
+    }
 }
 
 #Preview {
     SettingsView()
+        .modelContainer(PreviewData.container)
 }
