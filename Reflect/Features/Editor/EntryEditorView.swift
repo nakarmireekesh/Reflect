@@ -31,6 +31,7 @@ struct EntryEditorView: View {
     private var trimmed: String { text.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var workingEntry: JournalEntry? { entry ?? draft }
     private var placeholder: String { prompt ?? "What's on your mind?" }
+    private var isInCrisis: Bool { CrisisDetector.containsCrisisLanguage(text) }
 
     var body: some View {
         ScrollView {
@@ -51,7 +52,9 @@ struct EntryEditorView: View {
                         }
                     }
 
-                if intelligence.availability.isReady {
+                if isInCrisis {
+                    CrisisResourceView()
+                } else if intelligence.availability.isReady {
                     reflectionSection
                 } else if let reason = intelligence.availability.reason {
                     IntelligenceNotice(reason: reason)
@@ -59,6 +62,7 @@ struct EntryEditorView: View {
             }
             .padding(Spacing.l)
         }
+        .animation(.smooth(duration: 0.3), value: isInCrisis)
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -151,6 +155,7 @@ struct EntryEditorView: View {
     /// Streams a fresh follow-up question, and re-runs the structured mood/theme
     /// analysis. Also the manual recovery path if auto-analysis didn't finish.
     private func reflect() async {
+        guard !isInCrisis else { return }
         syncModel()
         errorMessage = nil
         followUpQuestion = ""
@@ -211,7 +216,7 @@ struct EntryEditorView: View {
             target.followUpPrompt = followUpQuestion
         }
 
-        if intelligence.availability.isReady, target.mood == nil {
+        if !CrisisDetector.containsCrisisLanguage(clean), intelligence.availability.isReady, target.mood == nil {
             target.isAnalysing = true
             let entryText = target.text
             let id = target.persistentModelID

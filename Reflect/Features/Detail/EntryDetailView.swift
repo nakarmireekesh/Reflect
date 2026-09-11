@@ -21,6 +21,8 @@ struct EntryDetailView: View {
         _followUpQuestion = State(initialValue: entry.followUpPrompt ?? "")
     }
 
+    private var isInCrisis: Bool { CrisisDetector.containsCrisisLanguage(entry.text) }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.xl) {
@@ -63,6 +65,14 @@ struct EntryDetailView: View {
     }
 
     @ViewBuilder private var reflectionSection: some View {
+        if isInCrisis {
+            CrisisResourceView()
+        } else {
+            reflectionDetails
+        }
+    }
+
+    @ViewBuilder private var reflectionDetails: some View {
         VStack(alignment: .leading, spacing: Spacing.l) {
             Divider().opacity(0.6)
 
@@ -120,6 +130,7 @@ struct EntryDetailView: View {
     }
 
     private func reflect() async {
+        guard !isInCrisis else { return }
         errorMessage = nil
         followUpQuestion = ""
         isStreaming = true
