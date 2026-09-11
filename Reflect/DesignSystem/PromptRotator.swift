@@ -14,7 +14,7 @@ final class PromptRotator {
     private let count: Int
     private let interval: Duration
 
-    init(pool: [String], count: Int, interval: Duration = .seconds(9)) {
+    init(pool: [String], count: Int, interval: Duration = .seconds(1800)) {
         self.pool = pool
         self.count = min(count, pool.count)
         self.current = Array(pool.shuffled().prefix(self.count))

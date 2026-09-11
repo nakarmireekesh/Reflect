@@ -36,20 +36,20 @@ struct TimelineView: View {
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
-                        showingSettings = true
-                    } label: {
-                        Image(systemName: "gearshape")
-                    }
-                    .accessibilityLabel("Settings")
-                }
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
                         newEntryPrompt = nil
                         composing = true
                     } label: {
                         Image(systemName: "square.and.pencil")
                     }
                     .accessibilityLabel("New entry")
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showingSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
+                    .accessibilityLabel("Settings")
                 }
             }
             .sheet(isPresented: $composing) {
