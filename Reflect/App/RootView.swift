@@ -3,6 +3,9 @@ import SwiftUI
 struct RootView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("isLockEnabled") private var isLockEnabled = false
+    @AppStorage("isReminderEnabled") private var isReminderEnabled = false
+    @AppStorage("reminderHour") private var reminderHour = 20
+    @AppStorage("reminderMinute") private var reminderMinute = 0
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var showOnboarding = false
@@ -32,6 +35,9 @@ struct RootView: View {
             }
             .onAppear {
                 showOnboarding = !hasCompletedOnboarding
+                if isReminderEnabled {
+                    ReminderScheduler.schedule(hour: reminderHour, minute: reminderMinute)
+                }
             }
 
             // Sits above everything, including the tab content — there's no

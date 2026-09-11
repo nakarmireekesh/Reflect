@@ -11,6 +11,7 @@ struct AskView: View {
     @State private var isStreaming = false
     @State private var errorMessage: String?
     @FocusState private var fieldFocused: Bool
+    @State private var promptRotator = PromptRotator(pool: Self.suggestions, count: 3)
 
     var body: some View {
         NavigationStack {
@@ -63,12 +64,19 @@ struct AskView: View {
             }
             .navigationTitle("Ask")
         }
+        .task { await promptRotator.start() }
     }
 
     private static let suggestions = [
         "What have I been feeling lately?",
         "What themes keep coming up?",
         "What made me happy recently?",
+        "What's been stressing me out?",
+        "How have my moods changed this month?",
+        "What do I keep avoiding?",
+        "What patterns show up on hard days?",
+        "What have I been proud of?",
+        "What's something I said I'd do but haven't?",
     ]
 
     @ViewBuilder private var idlePlaceholder: some View {
@@ -88,7 +96,7 @@ struct AskView: View {
             } else if intelligence.availability.isReady {
                 VStack(alignment: .leading, spacing: Spacing.s) {
                     SectionHeader(title: "Try asking")
-                    ForEach(Self.suggestions, id: \.self) { suggestion in
+                    ForEach(promptRotator.current, id: \.self) { suggestion in
                         Button {
                             question = suggestion
                             Task { await ask() }
@@ -101,6 +109,7 @@ struct AskView: View {
                         }
                         .buttonStyle(.bordered)
                         .tint(.brand)
+                        .transition(.opacity)
                     }
                 }
                 .padding(.top, Spacing.xs)

@@ -9,11 +9,18 @@ struct TimelineView: View {
     @State private var composing = false
     @State private var newEntryPrompt: String?
     @State private var showingSettings = false
+    @State private var promptRotator = PromptRotator(pool: Self.starterPrompts, count: 3)
 
     private static let starterPrompts = [
         "How was today?",
         "What's on your mind right now?",
         "One thing I noticed today…",
+        "What's weighing on you?",
+        "What went better than expected?",
+        "Something you're grateful for?",
+        "What's been on repeat in your head?",
+        "Describe today in one feeling.",
+        "What would make tomorrow better?",
     ]
 
     var body: some View {
@@ -27,7 +34,7 @@ struct TimelineView: View {
             }
             .navigationTitle("Journal")
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .primaryAction) {
                     Button {
                         showingSettings = true
                     } label: {
@@ -78,7 +85,7 @@ struct TimelineView: View {
             }
 
             VStack(spacing: Spacing.s) {
-                ForEach(Self.starterPrompts, id: \.self) { prompt in
+                ForEach(promptRotator.current, id: \.self) { prompt in
                     Button {
                         newEntryPrompt = prompt
                         composing = true
@@ -90,6 +97,7 @@ struct TimelineView: View {
                     }
                     .buttonStyle(.bordered)
                     .tint(.brand)
+                    .transition(.opacity)
                 }
 
                 Button("Blank page") {
@@ -102,6 +110,7 @@ struct TimelineView: View {
             .frame(maxWidth: 320)
         }
         .padding(Spacing.xl)
+        .task { await promptRotator.start() }
     }
 
     // MARK: - Entry list
