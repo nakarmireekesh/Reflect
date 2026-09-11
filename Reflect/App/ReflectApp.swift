@@ -4,15 +4,36 @@ import UIKit
 
 @main
 struct ReflectApp: App {
+    private let modelContainer: ModelContainer
+
     init() {
         Self.applySerifNavigationTitles()
+        modelContainer = Self.makeModelContainer()
     }
 
     var body: some Scene {
         WindowGroup {
             RootView()
         }
-        .modelContainer(for: JournalEntry.self)
+        .modelContainer(modelContainer)
+    }
+
+    /// Builds the container through the versioned schema + migration plan
+    /// (currently a no-op plan — see `JournalMigrationPlan`) rather than the
+    /// `.modelContainer(for:)` shorthand, so a future schema version has
+    /// somewhere to plug in an actual migration.
+    private static func makeModelContainer() -> ModelContainer {
+        let schema = Schema(versionedSchema: JournalSchemaV1.self)
+        let configuration = ModelConfiguration(schema: schema)
+        do {
+            return try ModelContainer(
+                for: schema,
+                migrationPlan: JournalMigrationPlan.self,
+                configurations: [configuration]
+            )
+        } catch {
+            fatalError("Failed to create the journal's model container: \(error)")
+        }
     }
 
     /// Render navigation-bar titles in the same serif as the writing itself,
