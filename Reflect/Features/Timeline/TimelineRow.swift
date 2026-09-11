@@ -28,5 +28,6 @@ struct TimelineRow: View {
         .padding(.vertical, Spacing.xs)
         .animation(.smooth(duration: 0.25), value: entry.isAnalysing)
         .animation(.smooth(duration: 0.25), value: entry.mood)
+        .accessibilityElement(children: .combine)
     }
 }

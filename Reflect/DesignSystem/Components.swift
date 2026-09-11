@@ -11,6 +11,7 @@ struct MoodPill: View {
             .padding(.vertical, 3)
             .background(tint.opacity(0.16), in: Capsule())
             .foregroundStyle(tint)
+            .accessibilityLabel("Mood: \(text)")
     }
 }
 
@@ -23,6 +24,7 @@ struct ThemeChip: View {
             .padding(.vertical, 3)
             .overlay(Capsule().strokeBorder(.quaternary))
             .foregroundStyle(.secondary)
+            .accessibilityLabel("Theme: \(text)")
     }
 }
 

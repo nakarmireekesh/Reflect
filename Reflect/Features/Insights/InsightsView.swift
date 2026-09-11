@@ -16,24 +16,36 @@ struct InsightsView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
-                    if entries.isEmpty {
-                        ContentUnavailableView(
-                            "No insights yet",
-                            systemImage: "chart.line.uptrend.xyaxis",
-                            description: Text("Write a few entries and patterns will show up here.")
-                        )
-                        .padding(.top, 60)
-                    } else {
+                if entries.isEmpty {
+                    emptyState
+                } else {
+                    VStack(alignment: .leading, spacing: 22) {
                         themesCard
                         digestCard
                     }
+                    .padding()
                 }
-                .padding()
             }
             .navigationTitle("Insights")
             .background(Color(.systemGroupedBackground))
         }
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: Spacing.m) {
+            Image(systemName: "chart.bar")
+                .font(.system(size: 40, weight: .light))
+                .foregroundStyle(.tertiary)
+            Text("No insights yet")
+                .font(.system(.title3, design: .serif).weight(.semibold))
+            Text("Write a few entries and patterns will show up here.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: 320)
+        .padding(.top, 100)
+        .frame(maxWidth: .infinity)
     }
 
     @ViewBuilder private var themesCard: some View {
@@ -54,6 +66,10 @@ struct InsightsView: View {
                 }
                 .chartXAxis(.hidden)
                 .frame(height: CGFloat(themes.count) * 30 + 4)
+                // The chart's fixed row height can't grow with the text, so the
+                // axis labels are capped short of the accessibility sizes that
+                // would otherwise overlap the bars.
+                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
             }
             .cardStyle()
         }

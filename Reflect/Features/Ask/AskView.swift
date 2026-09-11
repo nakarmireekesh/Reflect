@@ -25,6 +25,8 @@ struct AskView: View {
                             IntelligenceNotice(reason: reason)
                         }
 
+                        idlePlaceholder
+
                         if !usedEntries.isEmpty {
                             VStack(alignment: .leading, spacing: Spacing.xs) {
                                 SectionHeader(title: "Looking at")
@@ -60,6 +62,49 @@ struct AskView: View {
                 inputBar
             }
             .navigationTitle("Ask")
+        }
+    }
+
+    private static let suggestions = [
+        "What have I been feeling lately?",
+        "What themes keep coming up?",
+        "What made me happy recently?",
+    ]
+
+    @ViewBuilder private var idlePlaceholder: some View {
+        if answer.isEmpty, !isStreaming, usedEntries.isEmpty, errorMessage == nil {
+            if entries.isEmpty {
+                VStack(spacing: Spacing.s) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 32, weight: .light))
+                        .foregroundStyle(.tertiary)
+                    Text("Write a few entries first, then ask anything about them.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.top, Spacing.xxl)
+            } else if intelligence.availability.isReady {
+                VStack(alignment: .leading, spacing: Spacing.s) {
+                    SectionHeader(title: "Try asking")
+                    ForEach(Self.suggestions, id: \.self) { suggestion in
+                        Button {
+                            question = suggestion
+                            Task { await ask() }
+                        } label: {
+                            Text(suggestion)
+                                .font(.subheadline)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.vertical, Spacing.s + 2)
+                                .padding(.horizontal, Spacing.m)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.brand)
+                    }
+                }
+                .padding(.top, Spacing.xs)
+            }
         }
     }
 

@@ -62,20 +62,18 @@ struct EntryEditorView: View {
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if isNew {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        doneTapped += 1
-                        dismiss()
-                    }
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Done") {
+                    doneTapped += 1
+                    dismiss()
                 }
-                ToolbarItem(placement: .secondaryAction) {
+            }
+            ToolbarItem(placement: .secondaryAction) {
+                if isNew {
                     Button(role: .destructive, action: discard) {
                         Label("Discard", systemImage: "trash")
                     }
-                }
-            } else {
-                ToolbarItem(placement: .secondaryAction) {
+                } else {
                     Button(role: .destructive, action: deleteEntry) {
                         Label("Delete entry", systemImage: "trash")
                     }
@@ -113,6 +111,7 @@ struct EntryEditorView: View {
                     if let mood = workingEntry.mood { MoodPill(text: mood) }
                     ForEach(workingEntry.themes, id: \.self) { ThemeChip(text: $0) }
                 }
+                .accessibilityElement(children: .combine)
             }
 
             if !followUpQuestion.isEmpty {

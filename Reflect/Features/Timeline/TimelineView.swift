@@ -72,9 +72,9 @@ struct TimelineView: View {
                         composing = true
                     } label: {
                         Text(prompt)
-                            .font(.callout)
+                            .font(.subheadline)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, Spacing.m)
+                            .padding(.vertical, Spacing.s + 2)
                     }
                     .buttonStyle(.bordered)
                     .tint(.brand)
@@ -103,11 +103,18 @@ struct TimelineView: View {
                     .listRowInsets(EdgeInsets(top: Spacing.s, leading: Spacing.l, bottom: Spacing.m, trailing: Spacing.l))
             }
 
+            if let onThisDay {
+                OnThisDayCard(entry: onThisDay)
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: Spacing.s, leading: Spacing.l, bottom: Spacing.m, trailing: Spacing.l))
+            }
+
             ForEach(months) { section in
                 Section {
                     ForEach(section.entries) { entry in
                         NavigationLink {
-                            EntryEditorView(entry: entry, prompt: nil)
+                            EntryDetailView(entry: entry)
                         } label: {
                             TimelineRow(entry: entry)
                         }
@@ -137,6 +144,10 @@ struct TimelineView: View {
             .sorted { $0.month > $1.month }
     }
 
+    private var onThisDay: JournalEntry? {
+        TimelinePlanner.onThisDay(from: entries)
+    }
+
     private func delete(_ offsets: IndexSet, in monthEntries: [JournalEntry]) {
         withAnimation(.smooth) {
             for index in offsets {
@@ -157,6 +168,33 @@ private struct MonthSection: Identifiable {
         if calendar.isDate(month, equalTo: .now, toGranularity: .month) { return "This month" }
         let sameYear = calendar.isDate(month, equalTo: .now, toGranularity: .year)
         return month.formatted(sameYear ? .dateTime.month(.wide) : .dateTime.month(.wide).year())
+    }
+}
+
+private struct OnThisDayCard: View {
+    let entry: JournalEntry
+
+    var body: some View {
+        NavigationLink {
+            EntryDetailView(entry: entry)
+        } label: {
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                Label("On this day", systemImage: "clock.arrow.circlepath")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.brand)
+                Text(entry.createdAt.formatted(.dateTime.year().month(.wide).day()))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Text(entry.text)
+                    .journalText(.subheadline, lineSpacing: 3)
+                    .lineLimit(2)
+                    .foregroundStyle(.primary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .buttonStyle(.plain)
+        .cardStyle()
+        .accessibilityElement(children: .combine)
     }
 }
 
