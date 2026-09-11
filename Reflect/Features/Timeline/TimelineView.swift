@@ -8,6 +8,7 @@ struct TimelineView: View {
 
     @State private var composing = false
     @State private var newEntryPrompt: String?
+    @State private var showingSettings = false
 
     private static let starterPrompts = [
         "How was today?",
@@ -26,6 +27,14 @@ struct TimelineView: View {
             }
             .navigationTitle("Journal")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showingSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
+                    .accessibilityLabel("Settings")
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         newEntryPrompt = nil
@@ -40,6 +49,9 @@ struct TimelineView: View {
                 NavigationStack {
                     EntryEditorView(entry: nil, prompt: newEntryPrompt)
                 }
+            }
+            .sheet(isPresented: $showingSettings) {
+                SettingsView()
             }
             .task {
                 // Analysis runs in a detached task that dies with the app, so a
